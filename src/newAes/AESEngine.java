@@ -252,17 +252,15 @@ public class AESEngine {
 			(byte) 90, (byte) 65 };
 
 	private static byte galoisDefaultMult(byte val, byte mult) {
-		int buf = (val << 3);
+		int buf = ((val & 0xff) << 3);
 		if (mult != 0x0E)
 			buf ^= (val & 0xff);
 		if (mult > 0x0C)
-			buf ^= (val << 2);
+			buf ^= ((val & 0xff) << 2);
 		if ((mult & 0x02) > 0)
-			buf ^= (val << 1);
-//		System.out.println("buf: " + (buf >> 8));
-//		System.out.println("buf: " + ((buf >> 8) & 0x07));
+			buf ^= ((val & 0xff) << 1);
 		byte xorval = quickXORTable[(buf >> 8)& 0x07];
-		return xorval == 0 ? (byte) buf : (byte) (buf ^ xorval);
+		return ((xorval & 0xff) == 0) ? (byte) buf : (byte) (buf ^ xorval);
 	}
 
 	private void mixColumn(byte[] text) {
