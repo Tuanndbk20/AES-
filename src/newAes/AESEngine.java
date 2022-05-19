@@ -599,11 +599,16 @@ public class AESEngine {
 		int p;
 		
 		initCTR(Ctr);
+<<<<<<< Updated upstream
 		System.out.println("intialize ctr: "+toHex(Ctr));
+=======
+//		System.out.println("intialize ctr: "+toHex(Ctr));
+>>>>>>> Stashed changes
 		for (int k = 0; k < pblock; ++k) { // Encrypt all possible blocks
 //			System.out.println("k: "+k);
 			p = k * BLOCK_SIZE;
 			encryptBlock(Ctr, text);
+<<<<<<< Updated upstream
 			System.out.println(k+" Ctr after encrypt: "+toHex(text));
 			for (int i = 0; i < BLOCK_SIZE; i++) {
 				text[i] ^= plaintext[p+i];
@@ -611,6 +616,15 @@ public class AESEngine {
 			System.out.println("P"+k+" after xor: "+toHex(text));
 			increCTR(Ctr);
 			System.out.println("increase ctr: "+toHex(Ctr));
+=======
+//			System.out.println(k+" Ctr after encrypt: "+toHex(text));
+			for (int i = 0; i < BLOCK_SIZE; i++) {
+				text[i] ^= plaintext[p+i];
+			}
+//			System.out.println("P"+k+" after xor: "+toHex(text));
+			increCTR(Ctr);
+//			System.out.println("increase ctr: "+toHex(Ctr));
+>>>>>>> Stashed changes
 			System.arraycopy(text, 0, ciphertext, p, BLOCK_SIZE);
 		}
 
@@ -618,14 +632,22 @@ public class AESEngine {
 			byte[] temp =new byte[BLOCK_SIZE];
 			p = pblock * BLOCK_SIZE;
 			encryptBlock(Ctr, text);
+<<<<<<< Updated upstream
 			System.out.println(" Ctr after encrypt: "+toHex(text));
+=======
+//			System.out.println(" Ctr after encrypt: "+toHex(text));
+>>>>>>> Stashed changes
 			System.arraycopy(plaintext, p, temp, 0, extrabytes);
 			for (int i = extrabytes; i < BLOCK_SIZE; ++i) // TODO not sure if there is any faster way in C#
 				temp[i] = 0;
 			for (int i = 0; i < BLOCK_SIZE; i++) {
 				text[i] ^= temp[p+i];
 			}
+<<<<<<< Updated upstream
 			System.out.println("Pk after xor: "+toHex(text));
+=======
+//			System.out.println("Pk after xor: "+toHex(text));
+>>>>>>> Stashed changes
 			System.arraycopy(text, 0, ciphertext, p, extrabytes);
 		}
 		return true;
@@ -643,6 +665,7 @@ public class AESEngine {
 		int p;
 		
 		initCTR(Ctr);
+<<<<<<< Updated upstream
 		System.out.println("intialize ctr: "+toHex(Ctr));
 		for (int k = 0; k < cblock; ++k) {
 			p = k * BLOCK_SIZE;
@@ -654,6 +677,19 @@ public class AESEngine {
 			System.out.println("P"+k+" after xor: "+toHex(text));
 			increCTR(Ctr);
 			System.out.println("increase ctr: "+toHex(Ctr));
+=======
+//		System.out.println("intialize ctr: "+toHex(Ctr));
+		for (int k = 0; k < cblock; ++k) {
+			p = k * BLOCK_SIZE;
+			encryptBlock(Ctr, text);
+//			System.out.println(" Ctr after decrypt: "+toHex(text));
+			for (int i = 0; i < BLOCK_SIZE; i++) {
+				text[i] ^= ciphertext[p+i];
+			}
+//			System.out.println("P"+k+" after xor: "+toHex(text));
+			increCTR(Ctr);
+//			System.out.println("increase ctr: "+toHex(Ctr));
+>>>>>>> Stashed changes
 			System.arraycopy(text, 0, plaintext, p, BLOCK_SIZE);
 		} // extra bytes are not taken cared of...
 		return true;
