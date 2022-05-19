@@ -41,10 +41,10 @@ public class TestAES {
 	}
 
 	public static void main(String[] args) {
-		String kzz = "0f1571c947d9e8590cb7add6af7f6798";
+		String kzz = "0f1571c947d9e8590cb7add6af7f67980f1571c947d9e8590cb7add6af7f6798";//"0f1571c947d9e8590cb7add6af7f6798";//
 //		String kzz = "2B7E151628AED2A6ABF7158809CF4F3C";
 		byte[] kz = hexStringToByteArray(kzz);
-		String cleartext = "0123456789abcdeffedcba9876543210";
+		String cleartext = "0000000000000000000000000000000000000000000000000000000000000001";//"0123456789abcdeffedcba9876543210";//
 //		String cleartext = "3243F6A8885A308D313198A2E0370734";
 		byte[] plaintext = hexStringToByteArray(cleartext);
 		byte[] ciphertext = new byte[plaintext.length];
@@ -56,5 +56,12 @@ public class TestAES {
 		System.out.println("\n-------------------------------------------------------------------------\n");
 		newAES.Decrypt(ciphertext, plaintext);
 		System.out.println("plaintext: " + toHex(plaintext));
+		
+//		String ctr = "00000000000000000000000000000000";
+//		byte[] Ctr = hexStringToByteArray(ctr);
+//		AESEngine newAES = new AESEngine(Ctr);
+//		for(int i=0;i<429496729;i++) {
+//		newAES.increCTR(Ctr);
+//		}
 	}
 }

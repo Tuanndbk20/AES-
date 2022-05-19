@@ -7,6 +7,9 @@ public class AESEngine {
 	public final static int BLOCK_SIZE = (128 / 8);
 	public final int KEY_SIZE = (128 / 8);
 	public final static int ROUND_NO = 10;
+	public static byte[] IV = new byte[BLOCK_SIZE];
+	public static byte[] Ctr = new byte[BLOCK_SIZE];
+
 //	public static byte[] plaintext;
 
 	/* Transform a byte array in an hexadecimal string */
@@ -129,7 +132,7 @@ public class AESEngine {
 	};
 
 	public void setKey(byte[] value) {
-		System.out.println("process Key!");
+//		System.out.println("process Key!");
 		if (value == null || value.length != KEY_SIZE) {
 			System.out.println("value = null or value.length != KEY_SIZE");
 			return;
@@ -161,26 +164,27 @@ public class AESEngine {
 		} else {
 			setKey(this.key);
 		}
-		// check roundkey
-		for (int i = 0; i < 11; i++) {
-			System.out.println("\nround key " + i);
-			System.out.print(toHex(getSubkeys(i)));
-		}
+		////////////////////////////////////////// check roundkey
+		////////////////////////////////////////// ///////////////////////////////////
+//		for (int i = 0; i < 11; i++) {
+//			System.out.println("\nround key " + i);
+//			System.out.print(toHex(getSubkeys(i)));
+//		}
 	}
 
 	// shiftrow(1 row) then subword then xor RCON => t
 	private void keywordTransform(byte[] keyword, int roundno) { // round no starts from 0, ends at 9
 		if (roundno < 0 || roundno > ROUND_NO - 1)
 			return;
-		byte buf = keyword[0];// value of buff = decimal
+		byte buf = keyword[0];
 		keyword[0] = (byte) (sBox[keyword[1] & 0xff] ^ roundCoefficient[roundno]);
 		keyword[1] = sBox[keyword[2] & 0xff];
 		keyword[2] = sBox[keyword[3] & 0xff];
 		keyword[3] = sBox[buf & 0xff];
 	}
 
-	private void keyTransform(byte[] key, int roundno) { // subkey[1] and 0
-		byte[] keyword = new byte[4];
+	private void keyTransform(byte[] key, int roundno) {
+		byte[] keyword = new byte[4]; // keyword = ti
 		System.arraycopy(key, 12, keyword, 0, 4);
 		keywordTransform(keyword, roundno);
 		for (int k = 0; k < 4; ++k)
@@ -189,7 +193,7 @@ public class AESEngine {
 			key[i + 4] ^= key[i];
 	}
 
-	private void shiftRows(byte[] text) {
+	private static void shiftRows(byte[] text) {
 		byte buf;
 		// shift row 2 (1 -> 13, 5 -> 1, 9 -> 5, 13 -> 9)
 		buf = text[1];
@@ -239,9 +243,9 @@ public class AESEngine {
 		text[11] = buf;
 	}
 
-	public final byte BYTE_POLY_REDUCTION = 0x1b; // 0x1b
+	public final static byte BYTE_POLY_REDUCTION = 0x1b; // 0x1b
 
-	private byte galoisMult2(byte val) { // used for GaloisMult with 2 equal shift left 1 bit and xor with condition
+	private static byte galoisMult2(byte val) { // used for GaloisMult with 2 equal shift left 1 bit and xor with condition
 		byte polyRed = BYTE_POLY_REDUCTION;
 		return ((val & 0xff) >= 128) ? (byte) ((val << 1) ^ (polyRed)) : (byte) (val << 1); // compare with 128 to check
 																							// MSB of value =1?
@@ -259,11 +263,11 @@ public class AESEngine {
 			buf ^= ((val & 0xff) << 2);
 		if ((mult & 0x02) > 0)
 			buf ^= ((val & 0xff) << 1);
-		byte xorval = quickXORTable[(buf >> 8)& 0x07];
+		byte xorval = quickXORTable[(buf >> 8) & 0x07];
 		return ((xorval & 0xff) == 0) ? (byte) buf : (byte) (buf ^ xorval);
 	}
 
-	private void mixColumn(byte[] text) {
+	private static void mixColumn(byte[] text) {
 		byte[] temp = new byte[4];
 		int p;
 		for (int i = 0; i < 4; ++i) {
@@ -280,8 +284,8 @@ public class AESEngine {
 		}
 	}
 
-	private static byte[] inverseMixColumnMatrixElementTable ={ (byte) 11, (byte) 13, (byte) 9, (byte) 14,
-			(byte) 11, (byte) 13, (byte) 9 };
+	private static byte[] inverseMixColumnMatrixElementTable = { (byte) 11, (byte) 13, (byte) 9, (byte) 14, (byte) 11,
+			(byte) 13, (byte) 9 };
 
 	private static void inverseMixColumn(byte[] text) {
 		byte[] temp = new byte[4];
@@ -299,107 +303,329 @@ public class AESEngine {
 		}
 	}
 
-	public void encryptBlock(byte[] plaintext, byte[] ciphertext) { // since this is private function, no "input
-																	// protection" is needed.
+	/********************************  same below but print functions shift, add, mix, subbyte  *******************************/
+//	public void encryptBlock(byte[] plaintext, byte[] ciphertext) { // since this is private function, no "input
+//																	// protection" is needed.
+//		System.arraycopy(plaintext, 0, ciphertext, 0, plaintext.length);
+//		System.out.println("plaintext in block: " + toHex(plaintext));
+//
+//		for (int j = 0; j < BLOCK_SIZE; ++j)
+//			ciphertext[j] ^= getSubkeys(0, j); // addRoundKey for preround 1
+//
+//		System.out.println("addroundkey preround 1: " + toHex(ciphertext) + "\n");
+//		// process rounds
+//		for (int r = 0; r < ROUND_NO; ++r) {
+//			for (int i = 0; i < BLOCK_SIZE; ++i) {
+//				ciphertext[i] = sBox[ciphertext[i] & 0xff]; // subytes
+//			}
+//			System.out.println("after Sbox " + (r + 1) + ": " + toHex(ciphertext));
+//
+//			shiftRows(ciphertext);
+//			System.out.println("after shiftRows " + (r + 1) + ": " + toHex(ciphertext));
+//
+//			if (r < ROUND_NO - 1) {
+//				mixColumn(ciphertext);
+//				System.out.println("after mixColumn " + (r + 1) + ": " + toHex(ciphertext));
+//			}
+//
+//			for (int j1 = 0; j1 < BLOCK_SIZE; ++j1)
+//				ciphertext[j1] ^= getSubkeys(r + 1, j1);
+//			System.out.println("after addRoundKey round " + (r + 1) + ": " + toHex(ciphertext) + "\n");
+//		}
+//
+//	}
+//
+//	private static void decryptBlock(byte[] ciphertext, byte[] plaintext) { // since this is private function, no "input
+//																			// protection" is needed.
+//		System.arraycopy(ciphertext, 0, plaintext, 0, plaintext.length);
+//		// addRoundkey
+//		for (int j = 0; j < BLOCK_SIZE; ++j)
+//			plaintext[j] ^= getSubkeys(ROUND_NO, j);
+//		System.out.println("Roundkey 10 :" + toHex(getSubkeys(ROUND_NO)));
+//		System.out.println("\nafter AddRoundkey: " + toHex(plaintext));
+//
+//		for (int r = 0; r < ROUND_NO; ++r) {
+//			inverseShiftRows(plaintext);
+//			System.out.println("after inverseShiftRows Round " + (r + 1) + ": " + toHex(plaintext));
+//
+//			for (int i = 0; i < BLOCK_SIZE; ++i)
+//				plaintext[i] = inverseSBox[plaintext[i] & 0xff];
+//			System.out.println("after inverseSBox Round " + (r + 1) + ": " + toHex(plaintext));
+//
+//			for (int j = 0; j < BLOCK_SIZE; ++j)
+//				plaintext[j] ^= getSubkeys(ROUND_NO - r - 1, j);
+//			System.out.println("key round " + (ROUND_NO - r - 1) + ": " + toHex(getSubkeys(ROUND_NO - r - 1)));
+//			System.out.println("after AddRoundkey Round " + (r + 1) + ": " + toHex(plaintext));
+//
+//			if (r < 9) {
+//				inverseMixColumn(plaintext);
+//				System.out.println("after inverseMixColumn Round " + (r + 1) + ": " + toHex(plaintext) + "\n");
+//			}
+//		}
+//	}
+
+	public static void encryptBlock(byte[] plaintext, byte[] ciphertext) { // since this is private function, no "input
+		// protection" is needed.
 		System.arraycopy(plaintext, 0, ciphertext, 0, plaintext.length);
-		System.out.println("plaintext: " + toHex(plaintext));
 
 		for (int j = 0; j < BLOCK_SIZE; ++j)
 			ciphertext[j] ^= getSubkeys(0, j); // addRoundKey for preround 1
 
-		System.out.println("addroundkey preround 1: " + toHex(ciphertext) + "\n");
 		// process rounds
 		for (int r = 0; r < ROUND_NO; ++r) {
 			for (int i = 0; i < BLOCK_SIZE; ++i) {
 				ciphertext[i] = sBox[ciphertext[i] & 0xff]; // subytes
 			}
-			System.out.println("after Sbox " + (r + 1) + ": " + toHex(ciphertext));
 
 			shiftRows(ciphertext);
-			System.out.println("after shiftRows " + (r + 1) + ": " + toHex(ciphertext));
 
 			if (r < ROUND_NO - 1) {
 				mixColumn(ciphertext);
-				System.out.println("after mixColumn " + (r + 1) + ": " + toHex(ciphertext));
 			}
 
 			for (int j1 = 0; j1 < BLOCK_SIZE; ++j1)
 				ciphertext[j1] ^= getSubkeys(r + 1, j1);
-			System.out.println("after addRoundKey round " + (r + 1) + ": " + toHex(ciphertext) + "\n");
 		}
 
 	}
 
 	private static void decryptBlock(byte[] ciphertext, byte[] plaintext) { // since this is private function, no "input
-																			// protection" is needed.
+		// protection" is needed.
 		System.arraycopy(ciphertext, 0, plaintext, 0, plaintext.length);
-		// addRoundkey
+// addRoundkey
 		for (int j = 0; j < BLOCK_SIZE; ++j)
 			plaintext[j] ^= getSubkeys(ROUND_NO, j);
-		System.out.println("Roundkey 10 :" + toHex(getSubkeys(ROUND_NO)));
-		System.out.println("\nafter AddRoundkey: " + toHex(plaintext));
 
 		for (int r = 0; r < ROUND_NO; ++r) {
 			inverseShiftRows(plaintext);
-			System.out.println("after inverseShiftRows Round " + (r + 1) + ": " + toHex(plaintext));
 
 			for (int i = 0; i < BLOCK_SIZE; ++i)
 				plaintext[i] = inverseSBox[plaintext[i] & 0xff];
-			System.out.println("after inverseSBox Round " + (r + 1) + ": " + toHex(plaintext));
 
 			for (int j = 0; j < BLOCK_SIZE; ++j)
-				plaintext[j] ^= getSubkeys(ROUND_NO - r-1, j);
-			System.out.println("key round: "+toHex(getSubkeys(ROUND_NO - r -1)));
-			System.out.println("after AddRoundkey Round " + (r + 1) + ": " + toHex(plaintext) );
+				plaintext[j] ^= getSubkeys(ROUND_NO - r - 1, j);
 
-			if (r < 9)
+			if (r < 9) {
 				inverseMixColumn(plaintext);
-			System.out.println("after inverseMixColumn Round " + (r + 1) + ": " + toHex(plaintext)+ "\n");
+			}
 		}
 	}
 
-//	private static void decryptBlock(byte[] ciphertext, byte[] plaintext) { // since this is private function, no "input
-//		// protection" is needed.
-//		System.arraycopy(ciphertext, 0, plaintext, 0, plaintext.length);
+	/************************************* ECB mode ******************************/
+//	public boolean Encrypt(byte[] plaintext, byte[] ciphertext) {
+////		System.out.println("\n\nprocess encrypt!");
+//		if (plaintext == null || ciphertext == null || ciphertext.length < plaintext.length) // invalid input(s)
+//			return false;
+//		int extrabytes = plaintext.length % BLOCK_SIZE;
+////		System.out.println("extrabytes: " + extrabytes);
+//		int pblock = plaintext.length / BLOCK_SIZE;
+//		byte[] text = new byte[BLOCK_SIZE];
+//		int p;
 //
-//		for (int r = 0; r < ROUND_NO; ++r) {
-//			for (int j = 0; j < BLOCK_SIZE; ++j)
-//				plaintext[j] ^= getSubkeys(ROUND_NO - r, j);
-//			if (r > 0)
-//				inverseMixColumn(plaintext);
-//			inverseShiftRows(plaintext);
-//			for (int i = 0; i < BLOCK_SIZE; ++i)
-//				plaintext[i] = inverseSBox[plaintext[i] & 0xff];
+//		for (int k = 0; k < pblock; ++k) { // Encrypt all possible blocks
+////			System.out.println("k: "+k);
+//			p = k * BLOCK_SIZE;
+//			System.arraycopy(plaintext, p, text, 0, BLOCK_SIZE);
+//			encryptBlock(text, text);
+////			System.out.println("text: "+toHex(text));
+//			System.arraycopy(text, 0, ciphertext, p, BLOCK_SIZE);
 //		}
-//		for (int j = 0; j < BLOCK_SIZE; ++j)
-//			plaintext[j] ^= getSubkeys(0, j);
+//
+//		if (extrabytes > 0) { // encrypt the left over
+//			p = pblock * BLOCK_SIZE;
+//			System.arraycopy(plaintext, p, text, 0, extrabytes);
+//			for (int i = extrabytes; i < BLOCK_SIZE; ++i) // TODO not sure if there is any faster way in C#
+//				text[i] = 0;
+//			encryptBlock(text, text);
+//			System.arraycopy(text, 0, ciphertext, p, extrabytes);
+//		}
+//		return true;
+//	}
+//
+//	public static boolean Decrypt(byte[] ciphertext, byte[] plaintext) { // can only recover up to valid multiplication
+//																			// of 16, extra bytes are not decrypted
+//		if (plaintext == null || ciphertext == null) // invalid input(s)
+//			return false;
+//		int cblock = (ciphertext.length / BLOCK_SIZE);
+//		int pblock = plaintext.length / BLOCK_SIZE;
+//		if (pblock < cblock)
+//			return false; // invalid size
+//		byte[] text = new byte[BLOCK_SIZE];
+//		int p;
+//		for (int k = 0; k < cblock; ++k) {
+//			p = k * BLOCK_SIZE;
+//			System.arraycopy(ciphertext, p, text, 0, BLOCK_SIZE);
+//			decryptBlock(text, text);
+//			System.arraycopy(text, 0, plaintext, p, BLOCK_SIZE);
+//		} // extra bytes are not taken cared of...
+//		return true;
 //	}
 
+	
+	
+	/**************************** CBC mode *******************************/
+//	public void initIV(byte[] iv) {
+//		for (int i = 0; i < BLOCK_SIZE; i++) {
+//			iv[i] = 0;
+//			if (i == 15)
+//				iv[i] = 1;
+//		}
+//	} 
+//	
+//	public boolean Encrypt(byte[] plaintext, byte[] ciphertext) {
+////		System.out.println("\n\nprocess encrypt!");
+//		if (plaintext == null || ciphertext == null || ciphertext.length < plaintext.length) // invalid input(s)
+//			return false;
+//		int extrabytes = plaintext.length % BLOCK_SIZE;
+////		System.out.println("extrabytes: " + extrabytes);
+//		int pblock = plaintext.length / BLOCK_SIZE;
+//		byte[] text = new byte[BLOCK_SIZE];
+//		int p;
+//
+//		System.arraycopy(plaintext, 0, text, 0, BLOCK_SIZE);
+//		for (int k = 0; k < pblock; ++k) { // Encrypt all possible blocks
+////			System.out.println("k: "+k);
+//			p = k * BLOCK_SIZE;
+//			// process P1 with IV
+//			if (k == 0) {
+//				// init IV
+//				initIV(IV);
+//				for (int i = 0; i < BLOCK_SIZE; i++) {
+//					text[i] ^= IV[i];
+//				}
+////				System.out.println(k+" text after xor: "+toHex(text));
+//			} else {
+//				// process Pi with Ci
+////				System.out.println(k+" text "+toHex(text));
+//				if ((p + BLOCK_SIZE) <= plaintext.length) {
+//					for (int i = 0; i < BLOCK_SIZE; i++) {
+//						text[i] ^= plaintext[p + i];
+//					}
+////					System.out.println(k+" text after xor: "+toHex(text));
+//				}
+//			}
+//			encryptBlock(text, text);
+////			System.out.println(k+" text after encrypt: "+toHex(text));
+//			System.arraycopy(text, 0, ciphertext, p, BLOCK_SIZE);
+//		}
+//
+//		if (extrabytes > 0) { // encrypt the left over
+//			p = pblock * BLOCK_SIZE;
+//			byte[] temp = new byte[BLOCK_SIZE];
+//			System.arraycopy(plaintext, p, temp, 0, extrabytes);
+//			for (int i = extrabytes; i < BLOCK_SIZE; ++i) // TODO not sure if there is any faster way in C#
+//				temp[i] = 0;
+//			
+//			for (int i = 0; i < BLOCK_SIZE; i++) {
+//				text[i] ^= temp[i];
+//			}
+//			encryptBlock(text, text);
+//			System.arraycopy(text, 0, ciphertext, p, extrabytes);
+//		}
+//		return true;
+//	}
+//
+//	public static boolean Decrypt(byte[] ciphertext, byte[] plaintext) { // can only recover up to valid multiplication
+//																			// of 16, extra bytes are not decrypted
+//		if (plaintext == null || ciphertext == null) // invalid input(s)
+//			return false;
+//		int cblock = (ciphertext.length / BLOCK_SIZE);
+//		int pblock = plaintext.length / BLOCK_SIZE;
+//		if (pblock < cblock)
+//			return false; // invalid size
+//		byte[] text = new byte[BLOCK_SIZE];
+//		int p;
+//		
+//		for (int k = 0; k < cblock; ++k) {
+//			p = k * BLOCK_SIZE;
+//			System.arraycopy(ciphertext, p, text, 0, BLOCK_SIZE);
+//			decryptBlock(text, text);
+//			if(k==0) {
+//				for (int i = 0; i < BLOCK_SIZE; i++) {
+//					text[i] ^= IV[i];
+//				}
+//			}else {
+//				for (int i = 0; i < BLOCK_SIZE; i++) {
+//					text[i] ^= ciphertext[p+i-BLOCK_SIZE];
+//				}
+//			}
+//			System.arraycopy(text, 0, plaintext, p, BLOCK_SIZE);
+//		} // extra bytes are not taken cared of...
+//		return true;
+//	}
+	
+	
+	/********************************** CTR mode *******************************/
+	public static void initCTR(byte[] ctr) {
+		for (int i = 0; i < BLOCK_SIZE; i++) {
+			ctr[i] = 0;
+//			if(i==15) {
+//				ctr[i]=1;
+//			}
+		}
+	}
+	
+	public static void increCTR(byte[] ctr) {
+		int mem = 1;
+		//increase CTR;
+		for(int i=BLOCK_SIZE-1;i>=0;i--) {
+//			System.out.println("ctr["+i+"]: "+ctr[i]);
+			ctr[i]^=mem;
+			if(i!=0&&ctr[i]==0&&mem==1) {
+				mem=1;
+//				System.out.println("ctr["+i+"]: "+(ctr[i]));
+//				System.out.println("mem: "+mem);
+			}else {
+				if(i==0&&ctr[i]==0&&mem==1) {
+					System.out.println("overbuffer!");
+					break;
+				}
+				mem=0;
+//				System.out.println("ctr["+i+"]: "+(ctr[i]));
+//				System.out.println("mem: "+mem);
+			}
+		};
+//		System.out.println("increase 1: "+toHex(ctr));
+	}
+	
 	public boolean Encrypt(byte[] plaintext, byte[] ciphertext) {
-		System.out.println("\n\nprocess encrypt!");
+//		System.out.println("\n\nprocess encrypt!");
 		if (plaintext == null || ciphertext == null || ciphertext.length < plaintext.length) // invalid input(s)
 			return false;
 		int extrabytes = plaintext.length % BLOCK_SIZE;
-		System.out.println("extrabytes: " + extrabytes);
+//		System.out.println("extrabytes: " + extrabytes);
 		int pblock = plaintext.length / BLOCK_SIZE;
 		byte[] text = new byte[BLOCK_SIZE];
 		int p;
-
+		
+		initCTR(Ctr);
+		System.out.println("intialize ctr: "+toHex(Ctr));
 		for (int k = 0; k < pblock; ++k) { // Encrypt all possible blocks
 //			System.out.println("k: "+k);
 			p = k * BLOCK_SIZE;
-			System.arraycopy(plaintext, p, text, 0, BLOCK_SIZE);
-			encryptBlock(text, text);
-//			System.out.println("text: "+toHex(text));
+			encryptBlock(Ctr, text);
+			System.out.println(k+" Ctr after encrypt: "+toHex(text));
+			for (int i = 0; i < BLOCK_SIZE; i++) {
+				text[i] ^= plaintext[p+i];
+			}
+			System.out.println("P"+k+" after xor: "+toHex(text));
+			increCTR(Ctr);
+			System.out.println("increase ctr: "+toHex(Ctr));
 			System.arraycopy(text, 0, ciphertext, p, BLOCK_SIZE);
 		}
 
 		if (extrabytes > 0) { // encrypt the left over
+			byte[] temp =new byte[BLOCK_SIZE];
 			p = pblock * BLOCK_SIZE;
-			System.arraycopy(plaintext, p, text, 0, extrabytes);
+			encryptBlock(Ctr, text);
+			System.out.println(" Ctr after encrypt: "+toHex(text));
+			System.arraycopy(plaintext, p, temp, 0, extrabytes);
 			for (int i = extrabytes; i < BLOCK_SIZE; ++i) // TODO not sure if there is any faster way in C#
-				text[i] = 0;
-			encryptBlock(text, text);
+				temp[i] = 0;
+			for (int i = 0; i < BLOCK_SIZE; i++) {
+				text[i] ^= temp[p+i];
+			}
+			System.out.println("Pk after xor: "+toHex(text));
 			System.arraycopy(text, 0, ciphertext, p, extrabytes);
 		}
 		return true;
@@ -415,10 +641,19 @@ public class AESEngine {
 			return false; // invalid size
 		byte[] text = new byte[BLOCK_SIZE];
 		int p;
+		
+		initCTR(Ctr);
+		System.out.println("intialize ctr: "+toHex(Ctr));
 		for (int k = 0; k < cblock; ++k) {
 			p = k * BLOCK_SIZE;
-			System.arraycopy(ciphertext, p, text, 0, BLOCK_SIZE);
-			decryptBlock(text, text);
+			encryptBlock(Ctr, text);
+			System.out.println(" Ctr after decrypt: "+toHex(text));
+			for (int i = 0; i < BLOCK_SIZE; i++) {
+				text[i] ^= ciphertext[p+i];
+			}
+			System.out.println("P"+k+" after xor: "+toHex(text));
+			increCTR(Ctr);
+			System.out.println("increase ctr: "+toHex(Ctr));
 			System.arraycopy(text, 0, plaintext, p, BLOCK_SIZE);
 		} // extra bytes are not taken cared of...
 		return true;
