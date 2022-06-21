@@ -25,7 +25,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class TestAES {
+public class main_EncryptAES_SendFramePlaintext {
 
 	public static String localhost = "127.0.0.1";
 	public final static int port = 9999;
@@ -92,15 +92,8 @@ public class TestAES {
 		}
 		return data;
 	}
-
-<<<<<<< Updated upstream
-	public static void main(String[] args) {
-		String kzz = "0f1571c947d9e8590cb7add6af7f67980f1571c947d9e8590cb7add6af7f6798";//"0f1571c947d9e8590cb7add6af7f6798";//
-//		String kzz = "2B7E151628AED2A6ABF7158809CF4F3C";
-		byte[] kz = hexStringToByteArray(kzz);
-		String cleartext = "0000000000000000000000000000000000000000000000000000000000000001";//"0123456789abcdeffedcba9876543210";//
-//		String cleartext = "3243F6A8885A308D313198A2E0370734";
-=======
+	
+	
 	/************************** encryp and decrypt *******************************/
 //	public static void main(String[] args) {
 //		String kzz = "0f1571c947d9e8590cb7add6af7f6798";
@@ -120,6 +113,8 @@ public class TestAES {
 //		System.out.println("plaintext: " + toHex(plaintext));
 //	}
 
+	
+	
 	/**************************
 	 * encrypt and send with plaintext
 	 *******************************/
@@ -128,7 +123,7 @@ public class TestAES {
 //		String kzz = "0f1571c947d9e8590cb7add6af7f6798";
 //		byte[] kz = hexStringToByteArray(kzz);
 //
-//		AESEngine newAES = new AESEngine(kz);
+//		AESEngineECBmode newAES = new AESEngineECBmode(kz);
 //		newAES.Encrypt(plaintext, ciphertext);
 //		return (ciphertext);
 //	}
@@ -180,6 +175,9 @@ public class TestAES {
 //		}
 //		
 //	}
+	
+	
+	
 
 	/**************************
 	 * encrypt and send with text split frames
@@ -189,7 +187,7 @@ public class TestAES {
 		String kzz = "0f1571c947d9e8590cb7add6af7f6798";
 		byte[] kz = hexStringToByteArray(kzz);
 
-		AESEngine newAES = new AESEngine(kz);
+		AESEngineCBCmode newAES = new AESEngineCBCmode(kz);
 		newAES.Encrypt(plaintext, ciphertext);
 		return (ciphertext);
 	}
@@ -212,11 +210,11 @@ public class TestAES {
 	}
 
 	public static void main(String[] args) throws IOException {
-		String cleartext = "0123456789abcdeffedcba9876543210";
->>>>>>> Stashed changes
+		String cleartext = "0123456789abcdeffedcba98765432100123456789abcdeffedcba98765432100123456789abcdeffedcba98765432100123456789abcdeffedcba9876543210";
 		byte[] plaintext = hexStringToByteArray(cleartext);
 		byte[] ciphertext = new byte[plaintext.length];
 
+		System.out.println("plaintext: " + cleartext);
 		ciphertext = EncryptResource(plaintext);
 		System.out.println("ciphertext: " + toHex(ciphertext));
 
@@ -230,19 +228,16 @@ public class TestAES {
 		}
 		HttpPost httpPostRequest = new HttpPost(uri);
 		CloseableHttpResponse response;
+				
+//		//test ctr
+////		String ctr = "00000000000000000000000000000000";
+////		byte[] Ctr = hexStringToByteArray(ctr);
+////		AESEngine newAES = new AESEngine(Ctr);
+////		for(int i=0;i<429496729;i++) {
+////		newAES.increCTR(Ctr);
+////		}
+
 		
-<<<<<<< Updated upstream
-		System.out.println("\n-------------------------------------------------------------------------\n");
-		newAES.Decrypt(ciphertext, plaintext);
-		System.out.println("plaintext: " + toHex(plaintext));
-		
-//		String ctr = "00000000000000000000000000000000";
-//		byte[] Ctr = hexStringToByteArray(ctr);
-//		AESEngine newAES = new AESEngine(Ctr);
-//		for(int i=0;i<429496729;i++) {
-//		newAES.increCTR(Ctr);
-//		}
-=======
 		int lenFrame = 10;
 		if(lenFrame > ciphertext.length) {
 			System.out.println("lenFrame too long!");
@@ -297,8 +292,6 @@ public class TestAES {
 			}
 		}
 		httpClient.close();
-
->>>>>>> Stashed changes
 	}
 
 }
